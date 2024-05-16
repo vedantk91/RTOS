@@ -1,0 +1,52 @@
+#include<stdio.h>
+#include<FreeRTOS.h>
+#include<task.h>
+TaskHandle_t mytaskHandle1 = NULL;
+TaskHandle_t mytaskHandle2 = NULL;
+void mytask2(void* p)
+{
+    static char mytasklist[300];
+    while (1)
+    {
+        printf("\nWelcome to KJSCE from Task2: ");
+        printf("Name of my task2 is %s\r\n", pcTaskGetName(mytaskHandle2));
+
+        printf("The priority of task2 is %d\r\n", uxTaskPriorityGet(mytaskHandle2));
+        eTaskState mystate;
+        mystate = eTaskGetState(mytaskHandle1);
+        printf("\nState of task 1 is %d\r\n", mystate);
+        mystate = eTaskGetState(mytaskHandle2);
+        printf("\nState of task 2 is %d\r\n", mystate);
+        printf("Number of tasks running %lu\r\n", uxTaskGetNumberOfTasks());
+        vTaskList(mytasklist);
+        printf("\ntasks running in foreground or background \n%s\r\n", mytasklist);
+        printf("Status of task2 %lu\r\n", uxTaskGetStackHighWaterMark(mytaskHandle2));
+        vTaskDelay(pdMS_TO_TICKS(1000));
+
+    }
+    fflush(stdout);
+}
+void mytask1(void* p)
+{
+    printf("Name of my task1 is %s\r\n", pcTaskGetName(mytaskHandle1));
+    printf("The priority of task1 id %d\r\n", uxTaskPriorityGet(mytaskHandle1));
+    vTaskSuspend(mytaskHandle1);
+    while (1)
+    {
+        printf("\nWelcome to KJSCE from Task1 ");
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+    fflush(stdout);
+}
+void main_blinky(void)
+{
+    xTaskCreate(mytask1, "LED", 128, (void*)0, 1, &mytaskHandle1);
+
+    xTaskCreate(mytask2, "BUZZER", 128, (void*)0, 3, &mytaskHandle2);
+    vTaskStartScheduler();
+    while (1)
+    {
+        printf("My idle task");
+        //no work
+    }
+}

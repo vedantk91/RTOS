@@ -1,0 +1,62 @@
+/* Standard includes. */
+#include <stdio.h>
+#include <conio.h>
+
+/* Kernel includes. */
+#include "FreeRTOS.h"
+#include "task.h"
+
+
+TaskHandle_t mytaskHandler1 = NULL;
+TaskHandle_t mytaskHandler2 = NULL;
+
+
+
+void task1fn(void* P) {
+    int counter = (int*)P;
+    while (1) {
+
+        printf("Output from Task 1 : %d \n", counter--);
+        vTaskDelay(100);
+        if (counter == 12)
+            vTaskDelete(mytaskHandler1);
+
+    }
+    fflush(stdout);
+
+}
+
+void task2fn(void* K) {
+    int counter = (int*)K;
+    while (1) {
+
+        printf("Output from Task 2 : %d \n", counter--);
+        vTaskDelay(300);
+        if (counter == 32)
+            vTaskDelete(mytaskHandler2);
+
+    }
+    fflush(stdout);
+
+}
+
+void main_blinky(void)
+{
+    int var1 = 100;
+    int var2 = 100;
+
+    xTaskCreate(task1fn, "task1", 128, (void*)var1, 1, &mytaskHandler1);
+    xTaskCreate(task2fn, "task2", 128, (void*)var2, 2, &mytaskHandler2);
+
+    vTaskStartScheduler();
+
+
+    while (1)
+    {
+        //this should not run
+        printf("IDLE, This should not run");
+    }
+
+
+}
+

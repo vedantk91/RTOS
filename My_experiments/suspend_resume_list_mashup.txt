@@ -1,0 +1,93 @@
+#include<stdio.h>
+#include<FreeRTOS.h>
+#include<task.h>
+
+TaskHandle_t mytaskHandle1 = NULL;
+TaskHandle_t mytaskHandle2 = NULL;
+TaskHandle_t mytaskHandle3 = NULL;
+
+void mytask3(void* k) {
+    int c = (int*)k;
+    printf("\nTask 3");
+    printf("Name of this task:   %s\r\n", pcTaskGetName(mytaskHandle3));
+
+
+    vTaskDelete(mytaskHandle1);
+    printf("\nTask 1 deleted");
+    while (1)
+    {
+
+        vTaskDelay(100);
+        printf("\nCounter : %d", c++);
+        if (c == 50) {
+            printf("\nResuming Task 2:");
+            vTaskResume(mytaskHandle2);
+        }
+    }
+    fflush(stdout);
+
+}
+
+void mytask2(void* p)
+{
+    int count = (int*)p;
+    while (1)
+    {
+        
+        printf("\n Task No. 2 ");
+        printf("Name of this task:   %s\r\n", pcTaskGetName(mytaskHandle2));
+
+        printf("Priority:  %d\r\n", uxTaskPriorityGet(mytaskHandle2));
+
+        eTaskState mystate;
+        mystate = eTaskGetState(mytaskHandle2);
+        printf("\nState:   %d\r\n", mystate);
+
+        printf("\nCounter : %d", count++);
+        vTaskDelay(100);
+        if (count == 50)
+            xTaskCreate(mytask3, "Fati", 128, (void*)count, 3, &mytaskHandle3);
+        else if (count == 100)
+        {
+            vTaskSuspend(mytaskHandle2);
+            printf("\nTask 2 susended");
+
+        }
+    }
+    fflush(stdout);
+}
+
+
+
+void mytask1(void* p)
+{
+    static char mytasklist[300];
+
+    while (1)
+    {
+    printf("\n Task No. 1 ");
+    printf("Name of this task:   %s\r\n", pcTaskGetName(mytaskHandle1));
+
+    printf("Number of tasks running %lu\r\n", uxTaskGetNumberOfTasks());
+    vTaskList(mytasklist);
+
+    printf("\ntasks running in foreground or background \n%s\r\n", mytasklist);
+    printf("Status of task2 %lu\r\n", uxTaskGetStackHighWaterMark(mytaskHandle2));
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
+
+    }
+    fflush(stdout);
+}
+void main_blinky(void)
+{
+    xTaskCreate(mytask1, "Pedri", 128, (void*)0, 1, &mytaskHandle1);
+
+    xTaskCreate(mytask2, "Gavi", 128, (void*)0, 2, &mytaskHandle2);
+    vTaskStartScheduler();
+    while (1)
+    {
+        printf("My idle task");
+        //no work
+    }
+}
